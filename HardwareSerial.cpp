@@ -150,6 +150,7 @@ void HardwareSerial::assignCTS(int8_t pin)
 {
   if (pin >=0) {
     ctsPin = pin;
+
     pinMode(ctsPin, INPUT_PULLUP);
     _cts_irq();  // Initialise ctsStatus
 
@@ -334,6 +335,15 @@ void HardwareSerial::flush()
   // the hardware finished tranmission (TXC is set).
 }
 
+bool HardwareSerial::canSend() {
+  return !ctsStatus;  // sendPaused changes only if tx interrupt is active
+}
+
+bool HardwareSerial::canReceive(void) {
+  manageRTS();
+  return !recvPaused;
+}
+
 size_t HardwareSerial::write(uint8_t c)
 {
   _written = true;
@@ -365,7 +375,9 @@ size_t HardwareSerial::write(uint8_t c)
 	
   // If the output buffer is full, there's nothing for it other than to 
   // wait for the interrupt handler to empty it a bit
-  while (i == _tx_buffer_tail) {
+  // If CTS is high, we need to wait even if there is space in the TX buffer
+  // or we could miss a reply to a command
+  while ((i == _tx_buffer_tail) || ctsStatus) {
     if (bit_is_clear(SREG, SREG_I)) {
       // Interrupts are disabled, so we'll have to poll the data
       // register empty flag ourselves. If it is set, pretend an
