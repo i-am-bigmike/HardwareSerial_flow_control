@@ -1,4 +1,4 @@
-# Arduino Hardware Serial with Flow Control
+# Arduino Hardware Serial with RTS/CTS Flow Control
 
 An Arduino AVR library to add hardware flow control via RTS/CTS to the serial ports. It’s based on the original HardwareSerial files modified to implement the flow control. The library is backward compatible, so it’s possible to compile old projects without any changes.
 
